@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Library</title>
+  </head>
+  <body>
+    <h1>My Library</h1>
+    <button onclick="window.location.href='/reg_title'">Register new Title</button>
+    <button onclick="window.location.href='/del_title'">Delete Title</button>
+    <ul>
+      <% books.forEach(element => { %>
+        <li><%= element.isbn %> by <%= element.title %></li>
+      <% }) %>
+    </ul>
+  </body>
+</html>
