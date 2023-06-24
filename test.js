@@ -54,11 +54,13 @@ app.engine('html', require('ejs').renderFile);
 app.use(express.static("views"));
 
 app.get('/', async function(req, res) {
+  await mongoose.connect('mongodb://127.0.0.1:27017/lib');
   // 로그인 여부의 쿠키가 있으면
   let check_login = req.cookies.ID;
   if (check_login != null) {
+    console.log(check_login);
     // DB에서 일치하는 ID를 찾아서 
-    let ret = await r_user.findOne({ id: input_id });
+    let ret = await r_user.findOne({ id: check_login });
     // 사서여부를 비교해서
     if (ret.is_lib == "true") {
       // 맞으면 사서 리스트로 리다이렉트
@@ -77,6 +79,7 @@ const reg_user = new mongoose.Schema({
   id: {type: String},
   pw: {type: String},
   is_lib: {type: String},
+  book_list: [{isbn: Number, title: String}]
 });
 
   // 책의 제목, 작가, 페이지수, 에디션을 입력받고 추가로 대출 가능으로 저장한다
@@ -88,6 +91,7 @@ const reg_book = new mongoose.Schema({
   edition: {type: String},
   page_num: {type: Number},
   is_avail: {type:String},
+  bor_user: {type:String}
 });
 
 const r_user = mongoose.model('reg_users', reg_user);
@@ -112,7 +116,7 @@ app.post('/login', async function(req, res) {
         // 맞으면 ID를 로그인 쿠키로 저장해서 보내준다
         res.cookie(`ID`,input_id);
         // 사서 여부를 비교해서 사서면 사서용 도서리스트로 리다이렉트
-        if (res.is_libr == "true") {
+        if (res.is_lib != "true") {
           res.send(`<meta http-equiv="Refresh" content="0; url='/libr_list'"/>`);
         } else {
           // 아니면 이용자용 도서리스트 리다이렉트
@@ -149,7 +153,8 @@ app.post('/register', async function(req, res) {
     const new_entry = new r_user({ 
       id: input_id,
        pw: input_pw,
-       is_lib: box_check
+       is_lib: box_check,
+       book_list: {isbn: 0, title: "TEST"}
     });
 
     await new_entry.save();
@@ -184,6 +189,52 @@ app.get('/libr_list', async function(req, res) {
   
   res.render('test_libr', {books});
   //res.render('check');
+});
+
+// 이용자용 리스트
+app.get('/user_list', async function(req, res) {
+  // 등록된 책들을 알파벳순으로 나열해준다
+  await mongoose.connect('mongodb://127.0.0.1:27017/lib');
+  // 등록된 책들을 알파벳순으로 나열해준다
+  // 책의 제목, 작가, 페이지수, ISBN, 에디션 대출 여부를 출력해준다
+  const books = await r_book.find({});
+  books.sort(alpha_order); 
+
+  res.render('user_libr', {books});
+});
+
+// 대여를 입력받으면
+app.post('/borrow_title', async (req, res) => {
+// 대여를 원하는 책들의 숫자를 받아서 저장한다
+let bor_count = 0;
+for (let c_isbn = 0; c_isbn < ret.length; c_isbn++) {
+  isbn_str = ret[c_isbn].isbn.toString();
+  if (req.body[isbn_str] == "on") {
+    bor_count++;
+  }
+}
+
+// 사용자의 대여리스트의 크기를 5랑 비교해서
+// 크기가 5거나 크기 + 책의 수가 5 이상이면 
+// 	에러 메세지 출력
+// 아니면 
+// 	선택한 모든 책들의 대여여부를 비교해서
+// 	이미 대여가 되어있는 책이 있으면 에러메세지를 출력
+// 	아니면 대여리스트에 책들을 추가해주고 대여여부를 거짓으로 바꿔준다	
+
+});
+
+// 반납을 입력받으면
+app.post('/borrow_title', async (req, res) => {
+  await mongoose.connect('mongodb://127.0.0.1:27017/lib');
+  // 사용자의 대여리스트를 알파벳순으로 출력해준다
+  const books = await r_book.find({});
+  books.sort(alpha_order);  
+
+  res.render('borrow_libr', {books});
+// 반납을 하고싶은 책을 입력받는다
+// 입력받은 책들을 대여리스트에서 삭제하고 
+// 각 책들의 대여여부를 참으로 바꿔준다
 });
 
 // 책등록을 입력받으면
