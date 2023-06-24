@@ -186,9 +186,18 @@ app.get('/libr_list', async function(req, res) {
   // DB에 기록된 모든 책을 알파벳 순서대로 출력한다
   const books = await r_book.find({});
   books.sort(alpha_order);  
-  
+
   res.render('test_libr', {books});
   //res.render('check');
+});
+
+// 로그아웃
+app.get('/logout', async function(req, res) {
+  // 로그아웃을 받으면 쿠키삭제를 보낸다
+  res.clearCookie('ID');
+  console.log("ASDASDASD");
+  // 로그인으로 리다이렉트
+  res.render('login');
 });
 
 // 이용자용 리스트
