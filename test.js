@@ -58,16 +58,19 @@ app.get('/', async function(req, res) {
   // 로그인 여부의 쿠키가 있으면
   let check_login = req.cookies.ID;
   if (check_login != null) {
-    console.log(check_login);
     // DB에서 일치하는 ID를 찾아서 
     let ret = await r_user.findOne({ id: check_login });
     // 사서여부를 비교해서
+    if (ret == null) {
+      res.send(`<meta http-equiv="Refresh" content="0; url='/login'"/>`);
+    }
+
     if (ret.is_lib == "true") {
       // 맞으면 사서 리스트로 리다이렉트
       res.send(`<meta http-equiv="Refresh" content="0; url='/libr_list'"/>`);
     } else {
       // 틀리면 이용자 리스트로 리다이렉트
-      console.log("USER LIB");
+      res.send(`<meta http-equiv="Refresh" content="0; url='/user_list'"/>`);
     }
   } else {
   // 등록이나 로그인 둘중하나를 입력받는다
@@ -75,13 +78,30 @@ app.get('/', async function(req, res) {
   }
 });
 
+
+const reg_user = new mongoose.Schema({
+  id: {type: String},
+  pw: {type: String},
+  is_lib: {type: String},
+  book_list: [{isbn: Number, 
+    title: String, 
+    author: String,
+    edition: String,
+    page_num: Number
+  }]
+}, {
+  strict: true,
+  strictQuery: false // Turn off strict mode for query filters
+});
+
+/*
 const reg_user = new mongoose.Schema({
   id: {type: String},
   pw: {type: String},
   is_lib: {type: String},
   book_list: [{isbn: Number, title: String}]
 });
-
+*/
   // 책의 제목, 작가, 페이지수, 에디션을 입력받고 추가로 대출 가능으로 저장한다
 
 const reg_book = new mongoose.Schema({
@@ -116,15 +136,18 @@ app.post('/login', async function(req, res) {
         // 맞으면 ID를 로그인 쿠키로 저장해서 보내준다
         res.cookie(`ID`,input_id);
         // 사서 여부를 비교해서 사서면 사서용 도서리스트로 리다이렉트
-        if (res.is_lib != "true") {
+        if (ret.is_lib == "true") {
+          console.log("IS LIB");
           res.send(`<meta http-equiv="Refresh" content="0; url='/libr_list'"/>`);
         } else {
           // 아니면 이용자용 도서리스트 리다이렉트
           console.log("USER LIBRARY");
+          res.send(`<meta http-equiv="Refresh" content="0; url='/user_list'"/>`);
         }
       } else {
           // 	비밀번호가 일치하지않으면 에러메시지 출력
         console.log("PASSWORD INCORRECT");
+        res.render("login");
       }
     }
 });
@@ -138,29 +161,35 @@ app.post('/register', async function(req, res) {
   let ret = r_user.findOne({name: input_id });
 
   // 저장된 아이디를 비교해서 일치하는지 본다
-  if (ret) {
+  if (ret.id) {
     console.log("ID ALREADY EXISTS");
+    res.render('login');
   } else {
     // 없으면 아이디, 비번, 사서인지 이용자인지의 여부를 DB에 저장한다
     let box = req.body["admin"];
     let box_check = "";
     if (box == "on") {
       box_check = "true";
+      const new_entry = new r_user({ 
+        id: input_id,
+        pw: input_pw,
+        is_lib: box_check
+      });
+      await new_entry.save();
     } else {
-      box_check = "false";
-    }
-  
-    const new_entry = new r_user({ 
-      id: input_id,
-       pw: input_pw,
-       is_lib: box_check,
-       book_list: {isbn: 0, title: "TEST"}
-    });
+      box_check = "false"; 
 
-    await new_entry.save();
+      const new_entry = new r_user({ 
+        id: input_id,
+        pw: input_pw,
+        is_lib: box_check,
+        book_list: {isbn: 0, title: "TEST", author: "MCGUF", edition: "5th", page_num: 300}
+      });
+      await new_entry.save();
+    }
 
     // 로그인/등록으로 리다이렉트
-    res.render('/login');
+    res.render('login');
   }
 });
 
@@ -195,55 +224,197 @@ app.get('/libr_list', async function(req, res) {
 app.get('/logout', async function(req, res) {
   // 로그아웃을 받으면 쿠키삭제를 보낸다
   res.clearCookie('ID');
-  console.log("ASDASDASD");
   // 로그인으로 리다이렉트
   res.render('login');
 });
 
-// 이용자용 리스트
-app.get('/user_list', async function(req, res) {
+/*
+let temp_list = ret.book_list;
+temp_list.push({isbn: 1,title: "TEST2"});
+console.log(temp_list);
+console.log("ASDASDASD");
+await r_user.findOneAndUpdate({id: input_id}, {book_list: temp_list } );
+*/
+
+/*
+이용자용 리스트
+등록된 책들을 알파벳순으로 나열해준다
+책의 제목, 작가, 페이지수, ISBN, 에디션 대출 여부를 출력해준다
+
+대여를 입력받으면
+대여를 원하는 책들의 숫자를 받아서 저장한다
+사용자의 대여리스트의 크기를 5랑 비교해서
+크기가 5거나 크기 + 책의 수가 5 이상이면 
+	에러 메세지 출력
+아니면 
+	선택한 모든 책들의 대여여부를 비교해서
+	이미 대여가 되어있는 책이 있으면 에러메세지를 출력
+	아니면 대여리스트에 책들을 추가해주고 대여여부를 거짓으로 바꿔준다	
+
+
+반납을 입력받으면
+사용자의 대여리스트를 알파벳순으로 출력해준다
+반납을 하고싶은 책을 입력받는다
+입력받은 책들을 대여리스트에서 삭제하고 
+각 책들의 대여여부를 참으로 바꿔준다
+*/
+
+
+/*
+--------------------------------
+
+대여 버튼과 모뎀을 바꿔주기
+*/
+
+
+/*
+대여 페이지
+
   // 등록된 책들을 알파벳순으로 나열해준다
-  await mongoose.connect('mongodb://127.0.0.1:27017/lib');
+
   // 등록된 책들을 알파벳순으로 나열해준다
   // 책의 제목, 작가, 페이지수, ISBN, 에디션 대출 여부를 출력해준다
+
+  await mongoose.connect('mongodb://127.0.0.1:27017/lib');
+  let cur_id = req.cookies.ID;
+  console.log(cur_id);
+  let temp_user = await r_user.findOne({id: cur_id});
+  user_books = temp_user.book_list;
+  user_books.sort(alpha_order);  
+
+  res.render('user_libr', {user_books});
+*/
+
+/*
+borrow
+    if (req.body[temp_list[c_isbn].isbn] == "on") {
+*/
+
+// 이용자용 리스트
+app.get('/user_list', async function(req, res) {
+  await mongoose.connect('mongodb://127.0.0.1:27017/lib');
+  // DB에 기록된 모든 책을 알파벳 순서대로 출력한다
   const books = await r_book.find({});
-  books.sort(alpha_order); 
+  books.sort(alpha_order);  
 
   res.render('user_libr', {books});
 });
 
 // 대여를 입력받으면
 app.post('/borrow_title', async (req, res) => {
-// 대여를 원하는 책들의 숫자를 받아서 저장한다
-let bor_count = 0;
-for (let c_isbn = 0; c_isbn < ret.length; c_isbn++) {
-  isbn_str = ret[c_isbn].isbn.toString();
-  if (req.body[isbn_str] == "on") {
-    bor_count++;
+  await mongoose.connect('mongodb://127.0.0.1:27017/lib');
+  let cur_id = req.cookies.ID;
+
+  let ret = await r_user.findOne({ id: cur_id });
+  let temp_list = ret.book_list;
+  let sel_list = [];
+
+  let query = await r_book.find().select('isbn -_id');
+  // 등록된 모든 책의 isbn이 체크됐는지 아닌지를 확인하고
+  // 되있으면 책의수 에다가 1을 더하고 저장한다
+  let bor_count = 0;
+  for (let c_isbn = 0; c_isbn < query.length; c_isbn++) {
+    if (req.body[query[c_isbn].isbn] == "on") {
+      bor_count++;
+
+      // 대여선택리스트에 있는 책들의 ISBN만 모아서 저장한다
+      sel_list.push(query[c_isbn].isbn);
+    }
   }
-}
+
+  let process_bor = "true";
 
 // 사용자의 대여리스트의 크기를 5랑 비교해서
 // 크기가 5거나 크기 + 책의 수가 5 이상이면 
+  if (temp_list.length == 5 || (temp_list.length + bor_count) > 5) {
 // 	에러 메세지 출력
-// 아니면 
-// 	선택한 모든 책들의 대여여부를 비교해서
-// 	이미 대여가 되어있는 책이 있으면 에러메세지를 출력
-// 	아니면 대여리스트에 책들을 추가해주고 대여여부를 거짓으로 바꿔준다	
+    console.log("ERROR, EXCEEDING BORROW LIMIT");
+  } else {
+    // 아니면 
+    // ISBN으로 데이터베이스를 찾아서 이미 대여가 되어있는 책이 하나라도 있으면 에러메세지를 출력한다
+    let temp_isbn = "";
 
+    for (let c_isbn = 0; c_isbn < sel_list.length; c_isbn++) {
+      temp_isbn = sel_list[c_isbn];
+      ret = await r_book.findOne({ isbn: temp_isbn });
+
+      if (ret.is_avail == "false") {
+        console.log("BOOK UNAVAILABLE");
+        process_bor = "false";
+        break;
+      }
+    }
+  }
+
+  // 다 통과를 했으면 모든 ISBN을 대여 불가로 바꿔주고 다시 데이터베이스에 저장한다
+  if (process_bor == "true") {
+    for (let c_isbn = 0; c_isbn < sel_list.length; c_isbn++) {
+      temp_isbn = sel_list[c_isbn];
+      await r_book.findOneAndUpdate({isbn: temp_isbn}, {is_avail: "false" } );
+      ret = await r_book.findOne({ isbn: temp_isbn });
+      temp_list.push({isbn: ret.isbn, title: ret.title, author: ret.author, edition: ret.edition, page_num: ret.page_num });
+    }
+    // 대여선택리스트를 유저의 대여리스트에 넣어주고 데이터베이스에 저장한다
+    await r_user.findOneAndUpdate({id: cur_id}, {book_list: temp_list } );
+  }
+  // 다시 이용자 리스트로 리다이렉트
+  res.send(`<meta http-equiv="Refresh" content="0; url='/user_list'"/>`);
+});
+
+app.get('/return_page', async (req, res) => {
+  await mongoose.connect('mongodb://127.0.0.1:27017/lib');
+  // 사용자의 대여리스트를 알파벳순으로 출력해준다
+  let cur_id = req.cookies.ID;
+  let temp_user = await r_user.findOne({id: cur_id});
+  user_books = temp_user.book_list;
+  user_books.sort(alpha_order);  
+
+  res.render('return_libr', {user_books});
 });
 
 // 반납을 입력받으면
-app.post('/borrow_title', async (req, res) => {
+app.post('/return_title', async (req, res) => {
   await mongoose.connect('mongodb://127.0.0.1:27017/lib');
-  // 사용자의 대여리스트를 알파벳순으로 출력해준다
-  const books = await r_book.find({});
-  books.sort(alpha_order);  
 
-  res.render('borrow_libr', {books});
-// 반납을 하고싶은 책을 입력받는다
-// 입력받은 책들을 대여리스트에서 삭제하고 
-// 각 책들의 대여여부를 참으로 바꿔준다
+  let cur_id = req.cookies.ID;
+  let ret_list = [];
+  let isbn_str = "";
+
+  let ret = await r_book.find({}, 'isbn');
+
+  // 반납을 하고싶은 책을 입력받는다
+  for (let c_isbn = 0; c_isbn < ret.length; c_isbn++) {
+    isbn_str = ret[c_isbn].isbn.toString();
+    if (req.body[isbn_str] == "on") {
+      ret_list.push(isbn_str);
+    }
+  }
+
+  // 입력받은 책들을 대여리스트에서 삭제하고 
+  ret = await r_user.findOne({ id: cur_id });
+  let temp_list = ret.book_list;
+
+  for (let cur_ret = 0; cur_ret < ret_list.length; cur_ret++) {
+    for (let cur_book = 0; cur_book < temp_list.length; cur_book++) {
+      if (ret_list[cur_ret] == temp_list[cur_book].isbn) {
+        temp_list.splice(cur_book, 1);
+        cur_book = cur_book - 1;
+      } 
+    }
+  }
+
+  await r_user.findOneAndUpdate({id: cur_id}, {book_list: temp_list } );
+
+  let temp_isbn = "";
+  // 각 책들의 대여여부를 참으로 바꿔준다
+  for (let c_isbn = 0; c_isbn < ret_list.length; c_isbn++) {
+    temp_isbn = ret_list[c_isbn];
+    await r_book.findOneAndUpdate({isbn: temp_isbn}, {is_avail: "true" } );
+    ret = await r_book.findOne({ isbn: temp_isbn });
+  }
+
+  // 이용자 리스트로 리다이렉트
+  res.send(`<meta http-equiv="Refresh" content="0; url='/user_list'"/>`);
 });
 
 // 책등록을 입력받으면

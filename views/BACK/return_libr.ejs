@@ -311,7 +311,7 @@ $(document).ready(function(){
 						</tr>
 					</thead>
 					<tbody>
-						<% books.forEach(element => { %>
+						<% user_books.forEach(element => { %>
 						<tr>
 							<td>
 								<!  -!>
@@ -425,7 +425,7 @@ $(document).ready(function(){
 	<div id="deleteEmployeeModal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form id="del_form" action = "del_title" method="post">
+				<form id="del_form" action = "borrow_title" method="post">
 					<div class="modal-header">						
 						<h4 class="modal-title">Delete Employee</h4>
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>

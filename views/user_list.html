@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bootstrap CRUD Data Table for Database with Modal Form</title>
+<title>User List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -264,6 +264,11 @@ $(document).ready(function(){
 		}
 	});
 });
+
+function back_to_list(){
+                windows.location.href = "www.google.com";
+}
+
 </script>
 </head>
 <body>
@@ -277,19 +282,19 @@ $(document).ready(function(){
 						</div>
 						<div class="col-xs-6">
 							<a href="#addEmployeeModal" class="btn btn-success" data-toggle="modal"><i class="material-icons">&#xE147;</i> <span>Add New Employee</span></a>
-							<a href="#deleteEmployeeModal" class="btn btn-danger" data-toggle="modal"><i class="material-icons">&#xE15C;</i> <span>Delete</span></a>						
+							<a href="#deleteEmployeeModal" class="btn btn-danger" data-toggle="modal"><i class="material-icons">&#xE15C;</i> <span>Borrow</span></a>						
 						</div>
 					</div>
 					<div class="search_bar">					
-						<form action="search" name="s_bar" method = "post">
-							<input type="text" name="s_cont" placeholder="Search..">
-							<select name="s_field">
-							  <option value="isbn">ISBN</option>
-							  <option value="title">Title</option>
-							  <option value="author">Author</option>
-							  <option value="page_num">Page Number</option>
+						<form action="search" name="s_bar">
+							<input type="text" placeholder="Search..">
+							<select id="cars" name="cars">
+							  <option value="ISBN">ISBN</option>
+							  <option value="Title">Title</option>
+							  <option value="Author">Author</option>
 							</select>
 							<input type="submit" class="btn btn-success" value="Search">
+							<button onClick="back_to_list()">Back to List</button>
 						</form>
 					</div>
 				</div>
@@ -306,31 +311,90 @@ $(document).ready(function(){
 							<th>Author</th>
 							<th>Edition</th>
 							<th>Page Number</th>
-							<th>ISBN</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
 					<tbody>
-						<% books.forEach(element => { %>
 						<tr>
 							<td>
-								<!  -!>
 								<span class="custom-checkbox">
-									<input type="checkbox" form="del_form" name=<%= element.isbn%>>
-									<label for="checkbox2"></label>
+									<input type="checkbox" id="checkbox1" name="options[]" value="1">
+									<label for="checkbox1"></label>
 								</span>
 							</td>
-							<td><%= element.title %></td>
-							<td><%= element.author %></td>
-							<td><%= element.edition %></td>
-							<td><%= element.page_num %></td>
-							<td><%= element.isbn %></td>
+							<td>Thomas Hardy</td>
+							<td>thomashardy@mail.com</td>
+							<td>89 Chiaroscuro Rd, Portland, USA</td>
+							<td>(171) 555-2222</td>
 							<td>
 								<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
 								<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
 							</td>
 						</tr>
-      					<% }) %>
+						<tr>
+							<td>
+								<span class="custom-checkbox">
+									<input type="checkbox" id="checkbox2" name="options[]" value="1">
+									<label for="checkbox2"></label>
+								</span>
+							</td>
+							<td>Dominique Perrier</td>
+							<td>dominiqueperrier@mail.com</td>
+							<td>Obere Str. 57, Berlin, Germany</td>
+							<td>(313) 555-5735</td>
+							<td>
+								<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
+								<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<span class="custom-checkbox">
+									<input type="checkbox" id="checkbox3" name="options[]" value="1">
+									<label for="checkbox3"></label>
+								</span>
+							</td>
+							<td>Maria Anders</td>
+							<td>mariaanders@mail.com</td>
+							<td>25, rue Lauriston, Paris, France</td>
+							<td>(503) 555-9931</td>
+							<td>
+								<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
+								<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<span class="custom-checkbox">
+									<input type="checkbox" id="checkbox4" name="options[]" value="1">
+									<label for="checkbox4"></label>
+								</span>
+							</td>
+							<td>Fran Wilson</td>
+							<td>franwilson@mail.com</td>
+							<td>C/ Araquil, 67, Madrid, Spain</td>
+							<td>(204) 619-5731</td>
+							<td>
+								<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
+								<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
+							</td>
+						</tr>					
+						<tr>
+							<td>
+								<span class="custom-checkbox">
+									<input type="checkbox" id="checkbox5" name="options[]" value="1">
+									<label for="checkbox5"></label>
+								</span>
+							</td>
+							<td>Martin Blank</td>
+							<td>martinblank@mail.com</td>
+							<td>Via Monte Bianco 34, Turin, Italy</td>
+							<td>(480) 631-2097</td>
+							<td>
+								<a href="#editEmployeeModal" class="edit" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
+								<a href="#deleteEmployeeModal" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
+							</td>
+						</tr> 
 					</tbody>
 				</table>
 				<div class="clearfix">
@@ -345,9 +409,6 @@ $(document).ready(function(){
 						<li class="page-item"><a href="#" class="page-link">Next</a></li>
 					</ul>
 				</div>
-				<form action="logout">
-					<input type="submit" class="btn btn-success" value="Logout">
-				</form>
 			</div>
 		</div>        
     </div>
@@ -355,28 +416,28 @@ $(document).ready(function(){
 	<div id="addEmployeeModal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form action = "reg_title" method = "post">
+				<form>
 					<div class="modal-header">						
-						<h4 class="modal-title">Register new Title</h4>
+						<h4 class="modal-title">Add Title</h4>
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 					</div>
 					<div class="modal-body">					
 						<div class="form-group">
 							<label>Title</label>
-							<input type="text" name="b_title" class="form-control" required>
+							<input type="text" class="form-control" required>
 						</div>
 						<div class="form-group">
 							<label>Author</label>
-							<input type="text" name="b_author" class="form-control" required>
+							<input type="text" class="form-control" required>
 						</div>
 						<div class="form-group">
 							<label>Edition</label>
-							<input type="text" name="b_edition" class="form-control" required>
+							<textarea class="form-control" required></textarea>
 						</div>
 						<div class="form-group">
 							<label>Page Number</label>
-							<input type="number" name="b_pnum" class="form-control" required>
-						</div>						
+							<input type="text" class="form-control" required>
+						</div>					
 					</div>
 					<div class="modal-footer">
 						<input type="button" class="btn btn-default" data-dismiss="modal" value="Cancel">
@@ -425,14 +486,13 @@ $(document).ready(function(){
 	<div id="deleteEmployeeModal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
-				<form id="del_form" action = "del_title" method="post">
+				<form id = "borrow_form" action = "borrow_title" method="post">
 					<div class="modal-header">						
-						<h4 class="modal-title">Delete Employee</h4>
+						<h4 class="modal-title">Borrow Title</h4>
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 					</div>
 					<div class="modal-body">					
-						<p>Are you sure you want to delete these Records?</p>
-						<p class="text-warning"><small>This action cannot be undone.</small></p>
+						<p>Do you want to borrow these titles?</p>
 					</div>
 					<div class="modal-footer">
 						<input type="button" class="btn btn-default" data-dismiss="modal" value="Cancel">
